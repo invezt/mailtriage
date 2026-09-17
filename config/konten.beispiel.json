@@ -1,0 +1,64 @@
+{
+  "_hinweis": "Kopieren nach config/konten.json und anpassen. Passwoerter gehoeren NICHT in diese Datei, sondern in den Schluesselbund (siehe docs/einrichtung.md).",
+
+  "konten": [
+    {
+      "name": "icloud",
+      "beschreibung": "Privat - julius.steinmetz@icloud.com",
+      "host": "imap.mail.me.com",
+      "port": 993,
+      "benutzer": "julius.steinmetz",
+      "_benutzer_hinweis": "iCloud will meist nur den Teil vor dem @. Klappt das nicht, die volle Adresse eintragen.",
+      "keychain_dienst": "mailtriage-icloud",
+      "meine_adressen": [
+        "julius.steinmetz@icloud.com"
+      ],
+      "quell_ordner": ["INBOX"],
+      "ordner": {
+        "archiv": "Archive",
+        "papierkorb": "Deleted Messages",
+        "spam": "Junk",
+        "handeln": "Triage/1 Handeln",
+        "wartet": "Triage/2 Wartet",
+        "lesen": "Triage/3 Lesen"
+      }
+    },
+    {
+      "name": "firma",
+      "beschreibung": "Geschaeftlich",
+      "host": "BITTE-EINTRAGEN.example.de",
+      "_host_hinweis": "IMAP-Server des Firmenpostfachs. Steht in Apple Mail unter Einstellungen > Accounts > Servereinstellungen. Bei Microsoft 365: outlook.office365.com, bei IONOS: imap.ionos.de, bei All-Inkl: <domain>.de",
+      "port": 993,
+      "benutzer": "j.steinmetz@BITTE-EINTRAGEN.example.de",
+      "keychain_dienst": "mailtriage-firma",
+      "meine_adressen": [
+        "j.steinmetz@BITTE-EINTRAGEN.example.de"
+      ],
+      "quell_ordner": ["INBOX"],
+      "nur_lesen": false,
+      "_nur_lesen_hinweis": "Auf true setzen, um dieses Postfach nur zu beobachten: Es wird gescannt und berichtet, aber nie etwas verschoben. Sinnvoll, um dem System erst auf einem Konto zu vertrauen.",
+      "ordner": {
+        "archiv": "Archiv",
+        "papierkorb": "Geloeschte Elemente",
+        "spam": "Junk-E-Mail",
+        "handeln": "Triage/1 Handeln",
+        "wartet": "Triage/2 Wartet",
+        "lesen": "Triage/3 Lesen"
+      }
+    }
+  ],
+
+  "einstellungen": {
+    "max_aktionen_pro_lauf": 800,
+    "_max_aktionen_hinweis": "Obergrenze pro Ausfuehrung. Lieber zweimal laufen lassen, als Apple Mail mit 10.000 Aenderungen auf einmal zu ueberfahren.",
+    "taegliches_fenster_tage": 7,
+    "backlog_fenster_tage": 7,
+    "bericht_max_zeilen": 320,
+    "bericht_max_beispiele": 5,
+    "bericht_top_absender": 20,
+    "bericht_max_pruefen": 60,
+    "mindestalter_loeschen_tage": 30,
+    "_mindestalter_hinweis": "Harte Untergrenze: Juengeres wird nie automatisch geloescht, egal welche Regel greift. Keine Regel kann das aushebeln.",
+    "_bericht_max_pruefen_hinweis": "Wie viele Mails die Entscheidungsliste zeigt. Das ist deine Arbeitsliste im Backlog-Lauf - der Rest des Berichts bleibt aggregiert."
+  }
+}
