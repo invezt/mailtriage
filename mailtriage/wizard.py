@@ -12,6 +12,7 @@ import json
 import platform
 import shutil
 import subprocess
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -31,6 +32,37 @@ ANBIETER = {
 
 def _ist_macos() -> bool:
     return platform.system() == "Darwin"
+
+
+def eingabepuffer_leeren() -> None:
+    """Wartende Tastatureingaben verwerfen.
+
+    Wer mehrere Befehle auf einmal in das Terminal einfuegt, hinterlaesst
+    Zeilenumbrueche im Puffer. Die laufen sonst ungefragt in den naechsten
+    Prompt - und eine Passwortabfrage, die so eine leere Zeile frisst, sieht
+    aus, als waere sie uebersprungen worden. Genau das ist passiert.
+    """
+    try:
+        import termios
+    except ImportError:
+        return
+    try:
+        termios.tcflush(sys.stdin, termios.TCIFLUSH)
+    except (termios.error, OSError, ValueError, AttributeError):
+        # Kein echtes Terminal (Pipe, CI, Testlauf) - dann gibt es auch
+        # keinen Puffer zu leeren. termios.error ist kein OSError.
+        pass
+
+
+def aus_schluesselbund(dienst: str, konto: str) -> bool:
+    """Prueft, ob wirklich etwas im Schluesselbund gelandet ist."""
+    if not _ist_macos() or not shutil.which("security"):
+        return False
+    ergebnis = subprocess.run(
+        ["security", "find-generic-password", "-s", dienst, "-a", konto, "-w"],
+        capture_output=True, text=True, check=False,
+    )
+    return ergebnis.returncode == 0 and bool(ergebnis.stdout.strip())
 
 
 def frage(text: str, standard: str = "") -> str:
@@ -130,21 +162,45 @@ def konto_abfragen(roh: dict, name: str) -> tuple[dict, str | None]:
     dienst = eintrag.get("keychain_dienst") or f"mailtriage-{name}"
     eintrag["keychain_dienst"] = dienst
 
-    try:
-        passwort = getpass.getpass(f"  Passwort fuer {eintrag['benutzer']} "
-                                   "(Eingabe bleibt unsichtbar): ").strip()
-    except EOFError:
-        passwort = ""
+    if aus_schluesselbund(dienst, eintrag["benutzer"]):
+        if not frage_ja("Im Schluesselbund liegt schon ein Passwort. Ersetzen?", False):
+            print("  vorhandenes Passwort wird weiter benutzt.")
+            return eintrag, ""
+
+    passwort = ""
+    for versuch in range(3):
+        eingabepuffer_leeren()
+        try:
+            passwort = getpass.getpass(
+                f"  Passwort fuer {eintrag['benutzer']} "
+                "(Eingabe bleibt unsichtbar, dann Enter): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if passwort:
+            break
+        if versuch < 2:
+            print("  Nichts angekommen. Passwort einfuegen und Enter druecken.")
+
     if not passwort:
-        print("  kein Passwort eingegeben - uebersprungen.")
+        variable = f"MAILTRIAGE_{name.upper()}_PASSWORT"
+        print("\n  Ohne Passwort geht es nicht weiter. Du kannst es auch")
+        print("  selbst hinterlegen, dann sieht es niemand ausser dir:")
+        print(f"    security add-generic-password -U -s {dienst} \\")
+        print(f"      -a {eintrag['benutzer']} -w")
+        print(f"  (oder: export {variable}='<passwort>')")
         return eintrag, None
 
-    if ins_schluesselbund(dienst, eintrag["benutzer"], passwort):
-        print("  im Schluesselbund gespeichert.")
-    else:
+    if not ins_schluesselbund(dienst, eintrag["benutzer"], passwort):
         variable = f"MAILTRIAGE_{name.upper()}_PASSWORT"
         print("  Schluesselbund nicht verfuegbar. Setze stattdessen:")
         print(f"    export {variable}='<passwort>'")
+        return eintrag, passwort
+
+    if aus_schluesselbund(dienst, eintrag["benutzer"]):
+        print("  im Schluesselbund gespeichert und geprueft.")
+    else:
+        print("  WARNUNG: Speichern gemeldet, aber nicht wiederauffindbar.")
     return eintrag, passwort
 
 

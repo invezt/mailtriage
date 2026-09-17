@@ -146,3 +146,15 @@ class TestAssistent(unittest.TestCase):
                 self.assertIn("markiert", konten.read_text(encoding="utf-8"))
             finally:
                 wizard.CONFIG_DIR = alt
+
+    def test_puffer_leeren_stuerzt_nie_ab(self):
+        """Ohne Terminal (etwa in CI) muss das folgenlos durchlaufen."""
+        from mailtriage.wizard import eingabepuffer_leeren
+        eingabepuffer_leeren()
+
+    def test_schluesselbund_pruefung_ohne_macos(self):
+        from mailtriage.wizard import aus_schluesselbund, ins_schluesselbund
+        import platform
+        if platform.system() != "Darwin":
+            self.assertFalse(aus_schluesselbund("mailtriage-test", "niemand"))
+            self.assertFalse(ins_schluesselbund("mailtriage-test", "niemand", "x"))
