@@ -158,3 +158,39 @@ class TestAssistent(unittest.TestCase):
         if platform.system() != "Darwin":
             self.assertFalse(aus_schluesselbund("mailtriage-test", "niemand"))
             self.assertFalse(ins_schluesselbund("mailtriage-test", "niemand", "x"))
+
+    def test_passwort_funktionen_geben_nie_etwas_aus(self):
+        """Ein Passwort darf nie auf stdout landen - auch nicht versehentlich."""
+        import ast
+        import inspect
+        from mailtriage import wizard
+        quelle = ast.parse(inspect.getsource(wizard))
+        heikel = {"passwort_aus_apple_mail", "passwort_dialog", "passwort_erfragen"}
+        for knoten in ast.walk(quelle):
+            if not isinstance(knoten, ast.FunctionDef) or knoten.name not in heikel:
+                continue
+            for inner in ast.walk(knoten):
+                if not (isinstance(inner, ast.Call)
+                        and isinstance(inner.func, ast.Name)
+                        and inner.func.id in {"print", "input"}):
+                    continue
+                # Ein blankes print() kann nichts verraten, ein fester Text
+                # auch nicht. Gefaehrlich ist nur eine Variable im Argument.
+                for arg in inner.args:
+                    self.assertIsInstance(
+                        arg, ast.Constant,
+                        f"{knoten.name} gibt etwas Berechnetes aus - "
+                        "hier koennte ein Passwort durchrutschen")
+
+    def test_applescript_text_wird_escaped(self):
+        from mailtriage.wizard import _applescript_text
+        self.assertEqual(_applescript_text('a"b'), '"a\\"b"')
+        self.assertEqual(_applescript_text("c\\d"), '"c\\\\d"')
+        self.assertTrue(_applescript_text("x").startswith('"'))
+
+    def test_ohne_macos_wird_kein_passwort_erfunden(self):
+        import platform
+        from mailtriage.wizard import passwort_aus_apple_mail, passwort_dialog
+        if platform.system() != "Darwin":
+            self.assertIsNone(passwort_aus_apple_mail("imap.example.com", "wer"))
+            self.assertEqual(passwort_dialog("T", "Text"), "")

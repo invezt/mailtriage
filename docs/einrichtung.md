@@ -54,7 +54,26 @@ Zwei-Faktor-Anmeldung ebenfalls ein App-Passwort, sonst das normale Postfachpass
 
 ## 4. Passwörter in den Schlüsselbund
 
-Passwörter gehören nicht in eine Datei. In den Schlüsselbund damit:
+**Der einfache Weg – ohne Tippen:**
+
+```bash
+python3 -m mailtriage passwoerter
+```
+
+Der Befehl sieht zuerst nach, ob Apple Mail das Passwort schon hinterlegt hat –
+was bei jedem in Mail eingerichteten Postfach der Fall ist. macOS fragt dann
+einmal per Fenster nach der Freigabe („Immer erlauben" wählen), und damit ist es
+erledigt. Findet er nichts, öffnet sich ein natives Passwortfenster.
+
+Das funktioniert auch dann, wenn gar kein Terminal im Spiel ist – etwa wenn der
+Befehl aus der Claude-Desktop-App heraus läuft. Das Passwort geht vom Fenster
+direkt in den Schlüsselbund und wird nirgends ausgegeben.
+
+Bei iCloud kann es sein, dass Apple Mail dort kein klassisches Passwort ablegt.
+Dann fragt das Fenster danach, und du brauchst das app-spezifische Passwort aus
+Schritt 3.
+
+**Von Hand geht es natürlich auch:**
 
 ```bash
 security add-generic-password -s mailtriage-icloud \

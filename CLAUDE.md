@@ -20,6 +20,7 @@ python3 -m mailtriage anwenden [--ja]         # Vorschlag ausführen
 python3 -m mailtriage rueckgaengig [--ja]     # letzten Lauf zurückdrehen
 python3 -m mailtriage status                  # Fortschritt im Rückstand
 python3 -m mailtriage einrichten [--anlegen]  # Verbindung prüfen, Ordner anlegen
+python3 -m mailtriage passwoerter             # Passwörter in den Schlüsselbund
 ```
 
 Scan-Befehle kennen `--seit JJJJ-MM-TT`, `--ohne-loeschen` und `--konto NAME`.
@@ -31,9 +32,12 @@ Scan-Befehle kennen `--seit JJJJ-MM-TT`, `--ohne-loeschen` und `--konto NAME`.
 den Trockenlauf zeigen, den Bericht zusammenfassen, dann fragen.
 
 **Niemals nach Passwörtern fragen und nie eines entgegennehmen.** Sie liegen im
-macOS-Schlüsselbund. Fehlt eines, gib dem Nutzer den Befehl zum selbst
-Hinterlegen (`security add-generic-password -U -s <dienst> -a <benutzer> -w`)
-— er gibt es dann selbst ein, ohne dass es durch dieses Gespräch läuft.
+macOS-Schlüsselbund. Fehlt eines, führe `python3 -m mailtriage passwoerter` aus:
+Der Befehl übernimmt zuerst das Passwort, das Apple Mail ohnehin hinterlegt hat
+(macOS fragt per Fenster nach der Freigabe), und öffnet sonst ein natives
+Passwortfenster. Die Eingabe geht direkt in den Schlüsselbund und wird nie
+ausgegeben — sie taucht also auch in diesem Gespräch nicht auf. Das ist so
+gewollt: bitte nicht umgehen, indem du das Passwort erfragst oder ausliest.
 
 **Niemals `config/konten.json`, `config/regeln.json`, `runs/` oder `state/`
 committen.** Sie enthalten echte Adressen und Betreffzeilen und stehen in

@@ -46,6 +46,7 @@ Schritt für Schritt in [docs/einrichtung.md](docs/einrichtung.md).
 | `rueckgaengig [--ja]` | Einen ausgeführten Lauf zurückdrehen |
 | `status` | Wie weit ist der Rückstand |
 | `einrichten [--anlegen]` | Verbindung prüfen, Ordner anlegen |
+| `passwoerter` | Passwörter in den Schlüsselbund (Dialogfenster, kein Tippen) |
 
 Die Scan-Befehle kennen `--seit JJJJ-MM-TT` (ein bestimmtes Datum als Startpunkt),
 `--ohne-loeschen` (Eingewöhnungsmodus) und `--wochen N` (mehrere Backlog-Wochen).

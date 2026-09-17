@@ -242,6 +242,11 @@ def befehl_einrichten(args, cfg: config.Config) -> int:
     return 1 if probleme else 0
 
 
+def _passwoerter(args, cfg=None) -> int:
+    from .wizard import passwoerter
+    return passwoerter(args, cfg)
+
+
 def _start(args, cfg=None) -> int:
     from .wizard import start
     return start(args, cfg)
@@ -337,6 +342,12 @@ def baue_parser() -> argparse.ArgumentParser:
                                  help="Verbindung pruefen, Ordner anlegen"))
     s.add_argument("--anlegen", action="store_true", help="fehlende Ordner anlegen")
     s.set_defaults(fn=befehl_einrichten)
+
+    s = gemeinsam(sub.add_parser(
+        "passwoerter", help="Passwoerter im Schluesselbund hinterlegen (Dialogfenster)"))
+    s.add_argument("--ersetzen", action="store_true",
+                   help="vorhandenes Passwort ueberschreiben")
+    s.set_defaults(fn=_passwoerter)
 
     s = sub.add_parser(
         "start", help="Einrichtungsassistent: Postfaecher, Ordner, erster Lauf")
