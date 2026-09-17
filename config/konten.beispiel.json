@@ -51,8 +51,10 @@
     "_max_aktionen_hinweis": "Obergrenze pro Ausfuehrung. Lieber zweimal laufen lassen, als Apple Mail mit 10.000 Aenderungen auf einmal zu ueberfahren.",
     "taegliches_fenster_tage": 7,
     "backlog_fenster_tage": 7,
-    "bericht_max_zeilen": 220,
+    "bericht_max_zeilen": 320,
     "bericht_max_beispiele": 5,
-    "bericht_top_absender": 20
+    "bericht_top_absender": 20,
+    "bericht_max_pruefen": 60,
+    "_bericht_max_pruefen_hinweis": "Wie viele Mails die Entscheidungsliste zeigt. Das ist deine Arbeitsliste im Backlog-Lauf - der Rest des Berichts bleibt aggregiert."
   }
 }

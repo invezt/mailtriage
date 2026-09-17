@@ -144,6 +144,7 @@ def schreibe(lauf: Lauf, cfg: Config, ordner: Path | None = None) -> Lauf:
         max_zeilen=einst.bericht_max_zeilen,
         max_beispiele=einst.bericht_max_beispiele,
         top_absender=einst.bericht_top_absender,
+        max_pruefen=einst.bericht_max_pruefen,
     ), encoding="utf-8")
     return lauf
 

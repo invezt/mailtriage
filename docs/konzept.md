@@ -73,18 +73,26 @@ behandelt, je nachdem wie lange sie liegt:
 |---|---|---|
 | bis 14 Tage | `handeln` | `lesen` |
 | 14–30 Tage | bleibt liegen (`pruefen`) | `lesen` |
-| ab 30 Tage | `archivieren` | – |
+| ab 30 Tage | **`pruefen` – wird dir vorgelegt** | – |
 | ab 45 Tage, nie geöffnet | – | `loeschen` |
 | ab 120 Tage | – | `loeschen` |
 
-Dahinter steht eine Annahme, die man sich klarmachen sollte: **Eine Mail, die 30 Tage
-unbearbeitet lag, ist kein Arbeitsvorrat mehr, sondern Geschichte.** Was daran wirklich
-offen war, ist längst als Nachfrage zurückgekommen. Sie ins Archiv zu legen ist
-ehrlicher, als sie weiter im Posteingang als Vorwurf liegen zu lassen.
+Der wichtige Punkt in dieser Tabelle: **Echte Mail, die direkt an dich ging, wird nie
+automatisch weggeräumt.** Sie landet in `pruefen` und damit in der Entscheidungsliste
+des Berichts. Das ist bewusst die konservative Einstellung – automatisch behandelt
+werden nur Massenversand, Benachrichtigungen und eindeutig thematische Post.
 
-Wenn dir das zu forsch ist: In `config/regeln.json` die Regel *„Direkt an mich, älter
-als ein Monat"* von `archivieren` auf `pruefen` stellen. Dann wird sie dir vorgelegt
-statt weggeräumt.
+Weil der Backlog wochenweise abgearbeitet wird, bleibt diese Liste handhabbar: Sie
+umfasst immer nur eine Woche, nicht den ganzen Rückstand. In der Praxis sind das
+etwa 50–70 Mails pro Backlog-Woche, bei denen du entscheidest – gegenüber rund 75 %,
+die das Regelwerk allein erledigt.
+
+Wenn dir das mit der Zeit zu kleinteilig wird: In `config/regeln.json` die Regel
+*„Direkt an mich, älter als ein Monat"* von `pruefen` auf `archivieren` stellen. Dann
+wandert sie stumm ins Archiv – durchsuchbar, aber ohne deine Durchsicht.
+
+Nur in Kopie (CC) gesetzte Mail wird ab 21 Tagen archiviert, ohne Vorlage. Sie war
+nicht an dich adressiert, also auch nicht zur Bearbeitung gedacht.
 
 ## Die Sicherheitsnetze
 
@@ -138,8 +146,13 @@ Der Bericht ist deshalb **aggregiert und in der Länge fest begrenzt**. Er zeigt
 nach Aktion und Kategorie, die größten Absender, die Fälle für deine Entscheidung und
 ein paar Stichproben pro Aktion. Alles andere wird gezählt, nicht aufgelistet.
 
-Ob 50 oder 50.000 Mails im Lauf stecken: Der Bericht bleibt unter 220 Zeilen. Der
+Ob 50 oder 50.000 Mails im Lauf stecken: Der Bericht bleibt unter 320 Zeilen. Der
 vollständige Plan liegt als JSON daneben, falls du doch einmal alles sehen willst.
+
+Eine Ausnahme von der Aggregation gibt es bewusst: die **Entscheidungsliste**. Was in
+`pruefen` landet, wird einzeln aufgeführt – bis zu 60 Mails mit Datum, Absender und
+Betreff. Das ist deine Arbeitsliste, nicht Statistik. Über `bericht_max_pruefen` in
+`config/konten.json` einstellbar.
 
 ## Quellen
 

@@ -59,6 +59,8 @@ dem jede Ablage eine Entscheidung kostet. Mehr dazu in
 - **Schutzliste.** Steuerberater, Anwalt, Bank, Finanzamt – nie löschen, nie Spam.
 - **Vorschlag vor Ausführung.** Ohne `--ja` passiert nichts.
 - **Im Zweifel nichts.** Passt keine Regel, bleibt die Mail liegen und wird vorgelegt.
+- **Echte Post an dich** wird nie automatisch weggeräumt, nur Massenversand und
+  Benachrichtigungen.
 
 ## Warum es Apple Mail nicht überlastet
 
@@ -71,8 +73,9 @@ nie einen Nachrichtenrumpf, nie einen Anhang. Es arbeitet in Blöcken von 200 Ab
 bzw. 100 Verschiebungen mit Pause dazwischen und begrenzt sich auf 800 Bewegungen pro
 Ausführung. Apple Mail synchronisiert danach nur noch das Ergebnis.
 
-Auch der Bericht ist begrenzt: **unter 220 Zeilen, egal ob 50 oder 50.000 Mails** im
-Lauf stecken. Summen und Stichproben statt Zeile für Zeile.
+Auch der Bericht ist begrenzt: **unter 320 Zeilen, egal ob 50 oder 50.000 Mails** im
+Lauf stecken. Summen und Stichproben statt Zeile für Zeile – einzeln aufgeführt wird
+nur die Entscheidungsliste, weil das deine Arbeitsliste ist.
 
 ## Aufbau
 

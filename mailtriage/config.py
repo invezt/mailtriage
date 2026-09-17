@@ -75,9 +75,10 @@ class Einstellungen:
     max_aktionen_pro_lauf: int = 800
     taegliches_fenster_tage: int = 7
     backlog_fenster_tage: int = 7
-    bericht_max_zeilen: int = 220
+    bericht_max_zeilen: int = 320
     bericht_max_beispiele: int = 5
     bericht_top_absender: int = 20
+    bericht_max_pruefen: int = 60
 
 
 @dataclass

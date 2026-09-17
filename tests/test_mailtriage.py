@@ -169,6 +169,18 @@ class TestKlassifikation(unittest.TestCase):
         self.assertEqual(
             pruefe_regelwerk(roh["regeln"], roh["standard"], KONTO), [])
 
+    def test_alte_direktmail_wird_vorgelegt_nicht_weggeraeumt(self):
+        """Direkt adressierte Mail aelter als 30 Tage: Entscheidung bleibt bei dir."""
+        roh = json.loads(
+            (Path(__file__).parent.parent / "config" / "regeln.beispiel.json")
+            .read_text(encoding="utf-8"))
+        m = mach_msg(date=JETZT - timedelta(days=60), has_unsubscribe=False,
+                     subject="Rueckfrage zum Projekt", from_addr="mensch@partner.de",
+                     to_addrs=("ich@example.com",))
+        e = klassifiziere(m, roh["regeln"], roh["standard"], roh["schutz"], KONTO, JETZT)
+        self.assertEqual(e.aktion, "pruefen")
+        self.assertIsNone(e.zielordner)
+
     def test_beispielregelwerk_loescht_nichts_frisches(self):
         """Eine Mail von heute darf keine Regel in den Papierkorb schicken."""
         roh = json.loads(
@@ -263,11 +275,13 @@ class TestBericht(unittest.TestCase):
         } for i in range(n)]
 
     def test_bericht_bleibt_klein_bei_vielen_mails(self):
-        for n in (10, 1_000, 50_000):
-            zeilen = len(report.baue_bericht(
-                self.eintraege(n), konto="k", modus="backlog",
-                fenster=None, max_zeilen=220).splitlines())
-            self.assertLessEqual(zeilen, 220, f"{n} Mails ergaben {zeilen} Zeilen")
+        for grenze in (220, 320):
+            for n in (10, 1_000, 50_000):
+                zeilen = len(report.baue_bericht(
+                    self.eintraege(n), konto="k", modus="backlog",
+                    fenster=None, max_zeilen=grenze).splitlines())
+                self.assertLessEqual(zeilen, grenze,
+                                     f"{n} Mails ergaben {zeilen} Zeilen")
 
     def test_summen_stimmen(self):
         text = report.baue_bericht(self.eintraege(400), konto="k",
@@ -279,6 +293,22 @@ class TestBericht(unittest.TestCase):
         kurz = report.kurzfassung(self.eintraege(1000), "icloud")
         self.assertEqual(len(kurz.splitlines()), 1)
         self.assertIn("1000", kurz)
+
+    def test_entscheidungsliste_haelt_ihr_limit(self):
+        viele = [{**e, "aktion": "pruefen"} for e in self.eintraege(500)]
+        text = report.baue_bericht(viele, konto="k", modus="backlog",
+                                   fenster=None, max_pruefen=60)
+        # Kopf + Trenner + 60 Eintraege
+        tabellenzeilen = [z for z in text.splitlines() if z.startswith("| 2026-")]
+        self.assertEqual(len(tabellenzeilen), 60)
+        self.assertIn("und 440 weitere", text)
+
+    def test_entscheidungsliste_zeigt_alle_wenn_wenige(self):
+        wenige = [{**e, "aktion": "pruefen"} for e in self.eintraege(12)]
+        text = report.baue_bericht(wenige, konto="k", modus="backlog",
+                                   fenster=None, max_pruefen=60)
+        self.assertEqual(len([z for z in text.splitlines() if z.startswith("| 2026-")]), 12)
+        self.assertNotIn("weitere", text)
 
     def test_leerer_lauf(self):
         self.assertIn("Triage-Vorschlag",

@@ -72,8 +72,9 @@ Von neu nach alt, nicht von alt nach neu. Zwei Gründe:
 
 Das Regelwerk ist darauf abgestimmt: Bei alter Mail greifen andere Regeln als bei
 frischer. Eine Mail von heute, die direkt an dich ging, landet in *Handeln*. Dieselbe
-Mail, 30 Tage alt, landet im *Archiv* – denn nach einem Monat ist sie Geschichte, kein
-Arbeitsvorrat. Was wirklich offen war, kommt ohnehin als Nachfrage zurück.
+Mail nach 30 Tagen wird dir **vorgelegt** statt weggeräumt – echte Post an dich
+entscheidet das System nicht allein. Automatisch behandelt werden nur Massenversand,
+Benachrichtigungen und eindeutig thematische Mail.
 
 ## Wie lange dauert der Backlog
 
@@ -81,40 +82,40 @@ Die wichtige Nachricht zuerst: **Der Backlog wächst nicht mehr.** Sobald die t�
 Läufe stehen, bleibt der Rückstand fest – jede abgearbeitete Woche ist echter
 Fortschritt.
 
-Bei drei Jahren Rückstand (rund 156 Wochen), 5 Sessions pro Woche:
+Die Entscheidung ist gefallen: **kein pauschaler Altlast-Schnitt, alles wochenweise**,
+beginnend beim aktuellen Rand und rückwärts. Das ist die gründliche Variante – jede
+Woche wird tatsächlich angesehen, nichts verschwindet ungeprüft im Archiv.
+
+Was das zeitlich heißt, bei rund 156 Wochen Rückstand und 5 Sessions pro Woche:
 
 | Vorgehen | Rechnung | Dauer |
 |---|---|---|
-| Eine Woche pro Session | 156 ÷ 5 | **gut 7 Monate** |
+| Eine Woche pro Session | 156 ÷ 5 | gut 7 Monate |
 | Vier Wochen pro Session (`--wochen 4`) | 156 ÷ 20 | **rund 8 Wochen** |
-| Altlast-Schnitt + vier Wochen pro Session | 52 ÷ 20 | **rund 3 Wochen** |
+| Acht Wochen pro Session (`--wochen 8`) | 156 ÷ 40 | rund 4 Wochen |
 
-Eine Woche pro Tag ist zu langsam, wenn der Rückstand Jahre alt ist. Zwei Hebel:
-
-**`--wochen 4`** – der Nachmittagsblock nimmt vier Wochen statt einer. Der Bericht
-bleibt gleich kurz, weil er aggregiert. Der Aufwand für dich ändert sich kaum, weil
-du ohnehin nur Summen prüfst und die *pruefen*-Liste durchgehst.
+Eine Woche pro Tag ist bei jahrealtem Rückstand zu langsam. Der Hebel dagegen ist
+`--wochen N` – und **das ist kein Widerspruch zum wochenweisen Vorgehen**: Der Befehl
+macht N vollständige Wochendurchgänge hintereinander, jeder mit eigenem Fenster und
+eigenem Bericht. Es wird also nichts zusammengefasst oder übersprungen, es passiert nur
+mehr pro Sitzung.
 
 ```
 python3 -m mailtriage nachmittags --wochen 4
 ```
 
-**Der Altlast-Schnitt** – alles, was älter als zwölf Monate ist, in einem Rutsch. Das
-ist keine Kapitulation, sondern die bewusste Entscheidung, die dieses Vorgehen
-überhaupt erst tragfähig macht: Mail, die ein Jahr ungelesen lag, wird nicht mehr
-bearbeitet. Sie wird archiviert und bleibt durchsuchbar.
+Der Aufwand für dich wächst dabei unterproportional: Der aggregierte Teil des Berichts
+bleibt gleich kurz, nur die Entscheidungsliste wird länger (etwa 50–70 Mails pro
+Woche). Wenn vier Wochen zu viel werden, geh auf zwei zurück – der Cursor merkt sich
+den Stand, du verlierst nichts.
+
+**Mein Vorschlag:** Fang mit `--wochen 1` an, bis du dem Regelwerk traust. Nach zwei,
+drei Sitzungen siehst du, wie lang die Entscheidungsliste tatsächlich wird, und gehst
+dann auf `--wochen 4`. Den Fortschritt siehst du jederzeit:
 
 ```
-python3 -m mailtriage backlog --wochen 52    # ein Jahr am Stück
-python3 -m mailtriage anwenden --ja
+python3 -m mailtriage status
 ```
-
-Die Schutzregeln greifen auch hier: Markiertes und Geschütztes wird nicht angefasst,
-sondern vorgelegt. Und gelöscht heißt Papierkorb, nicht weg.
-
-Mein Vorschlag für den Start: **einmal den Altlast-Schnitt** für alles vor
-September 2025, danach **`--wochen 4`** im Nachmittagsblock. Dann ist der Rückstand in
-etwa einem Monat erledigt statt in einem Dreivierteljahr.
 
 ## Kalendereinträge
 

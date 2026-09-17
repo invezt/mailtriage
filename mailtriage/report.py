@@ -42,8 +42,8 @@ def _anteil(teil: int, ganz: int) -> str:
 
 def baue_bericht(eintraege: list[dict], *, konto: str, modus: str,
                  fenster: tuple[datetime, datetime] | None,
-                 max_zeilen: int = 220, max_beispiele: int = 5,
-                 top_absender: int = 20) -> str:
+                 max_zeilen: int = 320, max_beispiele: int = 5,
+                 top_absender: int = 20, max_pruefen: int = 60) -> str:
     """eintraege: die Plan-Eintraege (dicts mit aktion/kategorie/absender/...)."""
     gesamt = len(eintraege)
     nach_aktion = Counter(e["aktion"] for e in eintraege)
@@ -116,7 +116,7 @@ def baue_bericht(eintraege: list[dict], *, konto: str, modus: str,
             aus += [f"_Davon {len(geschuetzt)} durch die Schutzregeln "
                     "vom Loeschen zurueckgehalten._", ""]
         zeilen = []
-        for e in offen[: max_beispiele * 4]:
+        for e in offen[:max_pruefen]:
             zeilen.append([
                 f"{e.get('datum', '')[:10]}",
                 _kuerzen(e.get("absender") or e.get("absender_adresse", ""), 28),
@@ -124,7 +124,7 @@ def baue_bericht(eintraege: list[dict], *, konto: str, modus: str,
                 e["kategorie"],
             ])
         aus += _tabelle(["Datum", "Von", "Betreff", "Kategorie"], zeilen)
-        rest = len(offen) - min(len(offen), max_beispiele * 4)
+        rest = len(offen) - min(len(offen), max_pruefen)
         if rest > 0:
             aus += ["", f"_… und {rest} weitere. "
                     "Vollstaendig in der JSON-Datei zu diesem Lauf._"]

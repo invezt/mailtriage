@@ -151,8 +151,8 @@
     {
       "name": "Direkt an mich, aelter als ein Monat",
       "wenn": { "ist_massenversand": false, "an_mich_direkt": true, "aelter_als_tage": 30 },
-      "dann": { "kategorie": "geschaeftlich", "aktion": "archivieren",
-                "begruendung": "Nach einem Monat ist das Geschichte, kein Arbeitsvorrat. Was wirklich offen ist, kommt ohnehin per Nachfrage zurueck." }
+      "dann": { "kategorie": "geschaeftlich", "aktion": "pruefen",
+                "begruendung": "Echte Mail an dich, die liegen geblieben ist. Wird nicht automatisch weggeraeumt, sondern vorgelegt - das ist deine Arbeitsliste im Backlog-Lauf." }
     },
 
     {
