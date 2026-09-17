@@ -113,6 +113,17 @@ python3 -m mailtriage morgens --konto icloud
 
 Dann den Bericht in `runs/` lesen. Sieht der Vorschlag plausibel aus?
 
+**Für die ersten Wochen empfehlenswert** – nichts wird gelöscht, alles Destruktive
+landet nur in der Prüfliste, damit du siehst, *was* das Regelwerk löschen würde:
+
+```bash
+python3 -m mailtriage morgens --ohne-loeschen
+```
+
+Wer noch vorsichtiger sein will, stellt das Firmenkonto in `config/konten.json`
+zunächst auf `"nur_lesen": true` – dann wird es gescannt und berichtet, aber nie
+verändert.
+
 Trockenlauf – zeigt, was passieren würde, ohne es zu tun:
 
 ```bash
@@ -187,7 +198,16 @@ Wieder abschalten:
 | Läuft per launchd nicht | `runs/protokoll.log` und `runs/launchd.log` ansehen |
 | Apple Mail zeigt Änderungen nicht | Mail neu starten; die Änderung liegt auf dem Server |
 
-Versehentlich zu viel verschoben? Alles liegt im Papierkorb bzw. im Archiv und lässt
-sich in Apple Mail markieren und zurückschieben. Der vollständige Plan jedes Laufs
-liegt als JSON in `runs/` – da steht für jede Mail drin, woher sie kam und wohin sie
-ging.
+Versehentlich zu viel verschoben? Den ganzen Lauf zurückdrehen:
+
+```bash
+python3 -m mailtriage rueckgaengig        # zeigt, was zurückkäme
+python3 -m mailtriage rueckgaengig --ja   # holt es zurück
+```
+
+Oder von Hand: Alles liegt im Papierkorb bzw. im Archiv und lässt sich in Apple Mail
+markieren und zurückschieben. Der vollständige Plan jedes Laufs liegt als JSON in
+`runs/` – da steht für jede Mail drin, woher sie kam und wohin sie ging.
+
+Was das System grundsätzlich nicht kann und warum, steht in
+[Sicherungen](sicherungen.md).

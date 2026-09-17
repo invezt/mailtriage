@@ -4,8 +4,13 @@
   python3 -m mailtriage nachmittags    # 16:00 - Neues + eine Woche Backlog
   python3 -m mailtriage backlog        # nur eine Woche Backlog
   python3 -m mailtriage anwenden --ja  # den letzten Vorschlag ausfuehren
+  python3 -m mailtriage rueckgaengig --ja  # den letzten Lauf zurueckdrehen
   python3 -m mailtriage status         # wie weit ist der Backlog
   python3 -m mailtriage einrichten     # Verbindung testen, Ordner anlegen
+
+Zum Einstieg, bis das Regelwerk sitzt:
+
+  python3 -m mailtriage morgens --ohne-loeschen
 """
 
 from __future__ import annotations
@@ -15,7 +20,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import applier, config, planner, report, state
+from . import applier, config, guards, planner, report, state
 from .config import ConfigError
 from .mailbox import Mailbox, MailboxError
 from .rules import pruefe_regelwerk
@@ -60,9 +65,11 @@ def befehl_scannen(args, cfg: config.Config, modus: str) -> int:
                     if durchgaenge > 1 else "Backlog")
                 print(f"\n{konto.name} – {titel}")
                 try:
-                    lauf = planner.scanne(konto, cfg, einzel, fortschritt,
-                                          jetzt=jetzt, leise=args.leise)
-                except (MailboxError, ConfigError) as exc:
+                    lauf = planner.scanne(
+                        konto, cfg, einzel, fortschritt, jetzt=jetzt,
+                        leise=args.leise,
+                        ohne_loeschen=getattr(args, "ohne_loeschen", False))
+                except (MailboxError, ConfigError, guards.GuardError) as exc:
                     print(f"  FEHLER: {exc}", file=sys.stderr)
                     fehler += 1
                     break
@@ -106,9 +113,14 @@ def befehl_anwenden(args, cfg: config.Config) -> int:
     for pfad in plaene:
         print(f"\n{pfad.name}")
         try:
-            ergebnis = applier.wende_an(pfad, cfg, ja=args.ja,
-                                        max_aktionen=args.max_aktionen,
-                                        leise=args.leise)
+            ergebnis = applier.wende_an(
+                pfad, cfg, ja=args.ja, max_aktionen=args.max_aktionen,
+                leise=args.leise,
+                notbremse_loesen=getattr(args, "notbremse_loesen", False))
+        except guards.GuardError as exc:
+            print(f"  ANGEHALTEN: {exc}", file=sys.stderr)
+            fehler += 1
+            continue
         except (MailboxError, ConfigError) as exc:
             print(f"  FEHLER: {exc}", file=sys.stderr)
             fehler += 1
@@ -125,6 +137,42 @@ def befehl_anwenden(args, cfg: config.Config) -> int:
                       "Denselben Befehl noch einmal aufrufen.")
     if args.ja:
         print("\nHinweis: Geloeschtes liegt im Papierkorb, nicht endgueltig weg.")
+    return 1 if fehler else 0
+
+
+def befehl_rueckgaengig(args, cfg: config.Config) -> int:
+    plaene = [Path(p) for p in args.plan] if args.plan else []
+    if not plaene:
+        letzter = planner.letzter_ausgefuehrter_plan(
+            konto=args.konto[0] if args.konto else "")
+        if letzter:
+            plaene = [letzter]
+
+    if not plaene:
+        print("Kein ausgefuehrter Plan gefunden, den man zurueckdrehen koennte.")
+        return 1
+
+    fehler = 0
+    for pfad in plaene:
+        print(f"\n{pfad.name}")
+        try:
+            ergebnis = applier.mache_rueckgaengig(pfad, cfg, ja=args.ja,
+                                                  leise=args.leise)
+        except (MailboxError, ConfigError, guards.GuardError) as exc:
+            print(f"  FEHLER: {exc}", file=sys.stderr)
+            fehler += 1
+            continue
+        if args.ja:
+            print(f"  {ergebnis.bewegt} Nachrichten zurueckgeholt.")
+            for ziel, anzahl in sorted(ergebnis.je_ziel.items()):
+                print(f"    \u2192 {ziel}: {anzahl}")
+            if ergebnis.nicht_gefunden:
+                print(f"  {ergebnis.nicht_gefunden} nicht wiedergefunden - "
+                      "vermutlich inzwischen von Hand verschoben oder ohne "
+                      "Message-ID. In Apple Mail nachsehen.")
+            for meldung in ergebnis.fehler:
+                print(f"    FEHLER: {meldung}", file=sys.stderr)
+                fehler += 1
     return 1 if fehler else 0
 
 
@@ -221,6 +269,13 @@ def baue_parser() -> argparse.ArgumentParser:
         sp.add_argument("--leise", action="store_true", help="weniger Ausgabe")
         return sp
 
+    def scan_optionen(sp):
+        sp.add_argument("--ohne-loeschen", action="store_true",
+                        dest="ohne_loeschen",
+                        help="Eingewoehnungsmodus: nichts wird geloescht oder als "
+                             "Spam einsortiert, alles Destruktive wird vorgelegt")
+        return sp
+
     s = gemeinsam(sub.add_parser("morgens", help="10:00 – nur neue Nachrichten"))
     s.add_argument("--trotzdem", action="store_true", help=argparse.SUPPRESS)
     s.set_defaults(fn=lambda a, c: befehl_scannen(a, c, "taeglich"))
@@ -233,7 +288,8 @@ def baue_parser() -> argparse.ArgumentParser:
                    help="wie viele Backlog-Wochen in einem Rutsch (Standard: 1)")
     s.set_defaults(fn=lambda a, c: befehl_scannen(a, c, "beides"))
 
-    s = gemeinsam(sub.add_parser("backlog", help="nur Backlog, ohne Tagespost"))
+    s = scan_optionen(gemeinsam(sub.add_parser(
+        "backlog", help="nur Backlog, ohne Tagespost")))
     s.add_argument("--trotzdem", action="store_true")
     s.add_argument("--wochen", type=int, default=1,
                    help="wie viele Wochen in einem Rutsch, z.B. --wochen 12 "
@@ -245,7 +301,18 @@ def baue_parser() -> argparse.ArgumentParser:
     s.add_argument("--ja", action="store_true",
                    help="wirklich ausfuehren (ohne das passiert nichts)")
     s.add_argument("--max-aktionen", type=int, default=None)
+    s.add_argument("--notbremse-loesen", action="store_true",
+                   dest="notbremse_loesen",
+                   help="einen Plan ausfuehren, den die Notbremse angehalten hat")
     s.set_defaults(fn=befehl_anwenden)
+
+    s = gemeinsam(sub.add_parser(
+        "rueckgaengig", help="einen ausgefuehrten Plan zurueckdrehen"))
+    s.add_argument("plan", nargs="*",
+                   help="Plandatei(en); ohne Angabe der zuletzt ausgefuehrte")
+    s.add_argument("--ja", action="store_true",
+                   help="wirklich zurueckholen (ohne das passiert nichts)")
+    s.set_defaults(fn=befehl_rueckgaengig)
 
     s = gemeinsam(sub.add_parser("status", help="Backlog-Fortschritt anzeigen"))
     s.set_defaults(fn=befehl_status)

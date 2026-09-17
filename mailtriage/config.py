@@ -47,6 +47,7 @@ class Konto:
     ordner: dict[str, str] = field(default_factory=dict)
     quell_ordner: tuple[str, ...] = ("INBOX",)
     aktiv: bool = True
+    nur_lesen: bool = False
 
     def ordner_fuer(self, rolle: str) -> str:
         return self.ordner.get(rolle) or STANDARD_ORDNER.get(rolle) or "INBOX"
@@ -79,6 +80,7 @@ class Einstellungen:
     bericht_max_beispiele: int = 5
     bericht_top_absender: int = 20
     bericht_max_pruefen: int = 60
+    mindestalter_loeschen_tage: int = 30
 
 
 @dataclass
@@ -153,6 +155,7 @@ def lade(konten_pfad: Path | None = None, regel_pfad: Path | None = None) -> Con
             ordner={**eintrag.get("ordner", {})},
             quell_ordner=tuple(eintrag.get("quell_ordner", ["INBOX"])),
             aktiv=bool(eintrag.get("aktiv", True)),
+            nur_lesen=bool(eintrag.get("nur_lesen", False)),
         ))
 
     if not konten:

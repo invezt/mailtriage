@@ -70,10 +70,19 @@ class FakePostfach:
         self.fetch_aufrufe += 1
         return [self.nachrichten[u] for u in uids]
 
+    def neue_uid_nach_move(self, uid):
+        """Echte Server vergeben beim Verschieben eine neue UID."""
+        return uid + 10_000
+
     def move(self, folder, uids, target, progress=None):
         self.move_aufrufe += 1
         for u in uids:
-            self.nachrichten[u].folder = target
+            msg = self.nachrichten.pop(u)
+            msg.folder = target
+            # Neue UID vergeben - genau deshalb braucht das Rueckgaengig
+            # die Message-ID und nicht die UID.
+            msg.uid = self.neue_uid_nach_move(u)
+            self.nachrichten[msg.uid] = msg
             self.bewegt.append((u, target))
         return len(uids)
 
@@ -83,6 +92,7 @@ def mach_nachrichten(n=60):
     for i in range(n):
         alt = 200 if i % 2 else 2
         msgs.append(Message(
+            message_id=f"<nachricht-{i}@example.com>",
             account="test", folder="INBOX", uid=i + 1,
             date=JETZT - timedelta(days=alt), size=10_000,
             flags=("\\Seen",) if i % 3 else (),
@@ -213,6 +223,57 @@ class TestAblauf(unittest.TestCase):
         lauf = self.scanne("backlog", cursor="2025-01-08")
         self.assertEqual(lauf.eintraege, [])
         ergebnis = applier.wende_an(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        self.assertEqual(ergebnis.bewegt, 0)
+
+
+class TestRueckgaengig(TestAblauf):
+    """Ein ausgefuehrter Lauf muss sich zurueckdrehen lassen."""
+
+    def test_alles_landet_wieder_im_posteingang(self):
+        lauf = self.scanne()
+        applier.wende_an(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        bewegt = len(self.postfach.bewegt)
+        self.assertGreater(bewegt, 0)
+        nicht_inbox = [m for m in self.postfach.nachrichten.values()
+                       if m.folder != "INBOX"]
+        self.assertEqual(len(nicht_inbox), bewegt)
+
+        ergebnis = applier.mache_rueckgaengig(lauf.plan_pfad, self.cfg,
+                                              ja=True, leise=True)
+        self.assertEqual(ergebnis.bewegt, bewegt)
+        self.assertEqual(ergebnis.nicht_gefunden, 0)
+        self.assertEqual(
+            [m for m in self.postfach.nachrichten.values() if m.folder != "INBOX"], [])
+
+    def test_trockenlauf_holt_nichts_zurueck(self):
+        lauf = self.scanne()
+        applier.wende_an(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        vorher = len(self.postfach.bewegt)
+        applier.mache_rueckgaengig(lauf.plan_pfad, self.cfg, ja=False, leise=True)
+        self.assertEqual(len(self.postfach.bewegt), vorher)
+
+    def test_plan_gilt_danach_wieder_als_offen(self):
+        lauf = self.scanne()
+        applier.wende_an(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        applier.mache_rueckgaengig(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        plan = json.loads(lauf.plan_pfad.read_text(encoding="utf-8"))
+        self.assertFalse(any(e.get("erledigt") for e in plan["eintraege"]))
+        self.assertTrue(any(e.get("rueckgaengig") for e in plan["eintraege"]))
+
+    def test_ohne_message_id_wird_ehrlich_gemeldet(self):
+        for m in self.postfach.nachrichten.values():
+            m.message_id = ""
+        lauf = self.scanne()
+        applier.wende_an(lauf.plan_pfad, self.cfg, ja=True, leise=True)
+        ergebnis = applier.mache_rueckgaengig(lauf.plan_pfad, self.cfg,
+                                              ja=True, leise=True)
+        self.assertEqual(ergebnis.bewegt, 0)
+        self.assertGreater(ergebnis.nicht_gefunden, 0)
+
+    def test_nichts_ausgefuehrt_nichts_zurueckzudrehen(self):
+        lauf = self.scanne()
+        ergebnis = applier.mache_rueckgaengig(lauf.plan_pfad, self.cfg,
+                                              ja=True, leise=True)
         self.assertEqual(ergebnis.bewegt, 0)
 
 

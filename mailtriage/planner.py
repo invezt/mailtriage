@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timezone
 from pathlib import Path
 
-from . import report, state
+from . import guards, report, state
 from .config import RUNS_DIR, Config, Konto
 from .mailbox import Mailbox
 from .model import Message
@@ -48,6 +48,7 @@ class Lauf:
 def _eintrag(msg: Message, ent: Entscheidung) -> dict:
     return {
         "uid": msg.uid,
+        "message_id": msg.message_id,
         "ordner": msg.folder,
         "ziel": ent.zielordner,
         "aktion": ent.aktion,
@@ -74,7 +75,7 @@ def _fortschritt_anzeige(praefix: str):
 
 def scanne(konto: Konto, cfg: Config, modus: str, fortschritt: state.Fortschritt,
            *, jetzt: datetime | None = None, leise: bool = False,
-           nur_ungelesen: bool = False) -> Lauf:
+           nur_ungelesen: bool = False, ohne_loeschen: bool = False) -> Lauf:
     """Liest ein Konto im gewaehlten Modus und erzeugt den Plan."""
     jetzt = jetzt or datetime.now(timezone.utc)
     status = fortschritt.fuer(konto.name)
@@ -92,6 +93,11 @@ def scanne(konto: Konto, cfg: Config, modus: str, fortschritt: state.Fortschritt
     lauf = Lauf(konto=konto.name, modus=modus, von=von, bis=bis)
     passwort = konto.passwort()
 
+    # Vor dem Verbinden pruefen: Postausgang, Entwuerfe, Papierkorb und Spam
+    # werden nie gelesen, egal was in der Konfiguration steht.
+    for ordner in konto.quell_ordner:
+        guards.pruefe_quellordner(ordner)
+
     with Mailbox(konto.name, konto.host, konto.port, konto.benutzer,
                  passwort, verbose=not leise) as box:
         for ordner in konto.quell_ordner:
@@ -105,6 +111,12 @@ def scanne(konto: Konto, cfg: Config, modus: str, fortschritt: state.Fortschritt
             for msg in nachrichten:
                 ent = klassifiziere(msg, cfg.regeln, cfg.standard,
                                     cfg.schutz, konto, jetzt)
+                # Harte Sicherungen greifen nach dem Regelwerk und lassen
+                # sich durch keine Regel aushebeln.
+                ent = guards.erzwinge_mindestalter(
+                    ent, msg, jetzt, cfg.einstellungen.mindestalter_loeschen_tage)
+                if ohne_loeschen:
+                    ent = guards.ohne_loeschen(ent)
                 lauf.eintraege.append(_eintrag(msg, ent))
                 tag = msg.date.date()
                 if lauf.aeltester is None or tag < lauf.aeltester:
@@ -168,3 +180,21 @@ def letzter_plan(ordner: Path | None = None, konto: str = "") -> Path | None:
         except json.JSONDecodeError:
             continue
     return offen[0] if offen else None
+
+
+def letzter_ausgefuehrter_plan(ordner: Path | None = None,
+                               konto: str = "") -> Path | None:
+    """Der zuletzt ausgefuehrte Plan - fuer 'rueckgaengig'."""
+    ordner = ordner or RUNS_DIR
+    if not ordner.exists():
+        return None
+    kandidaten = [p for p in sorted(ordner.glob("*.json"), reverse=True)
+                  if not konto or f"-{konto}-" in p.name]
+    for pfad in kandidaten:
+        try:
+            plan = json.loads(pfad.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if any(e.get("erledigt") for e in plan.get("eintraege", [])):
+            return pfad
+    return None

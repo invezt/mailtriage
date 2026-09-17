@@ -130,12 +130,38 @@ class Mailbox:
             "Bei iCloud braucht es ein app-spezifisches Passwort, nicht das Apple-ID-Passwort."
         ) from last
 
+    def _mailbox_schliessen(self) -> None:
+        """Offenen Ordner schliessen, ohne dabei etwas zu loeschen.
+
+        CLOSE entfernt auf einem schreibbaren Ordner alle mit \\Deleted
+        markierten Nachrichten *endgueltig* - auch die, die du selbst in
+        Apple Mail zum Loeschen markiert hast und noch gar nicht loswerden
+        wolltest. Deshalb hier immer UNSELECT, das genau dasselbe tut, nur
+        ohne zu loeschen. Kann der Server kein UNSELECT, wird der Ordner
+        vorher nur lesend geoeffnet - dann ist auch CLOSE harmlos.
+        """
+        if self._selected is None or self._imap is None:
+            return
+        try:
+            if self.has("UNSELECT"):
+                self._imap.unselect()
+            elif self._selected_readonly:
+                self._imap.close()
+            else:
+                encoded = _quote(imap_utf7.encode(self._selected).decode("ascii"))
+                self._imap.select(encoded, readonly=True)
+                self._imap.close()
+        except (imaplib.IMAP4.error, OSError):
+            pass
+        finally:
+            self._selected = None
+            self._anzahl = 0
+
     def close(self) -> None:
         if self._imap is None:
             return
         try:
-            if self._selected:
-                self._imap.close()
+            self._mailbox_schliessen()
             self._imap.logout()
         except (imaplib.IMAP4.error, OSError):
             pass
@@ -214,11 +240,7 @@ class Mailbox:
         """
         if self._selected == folder and self._selected_readonly == readonly:
             return self._anzahl
-        if self._selected:
-            try:
-                self.imap.close()
-            except imaplib.IMAP4.error:
-                pass
+        self._mailbox_schliessen()
         encoded = _quote(imap_utf7.encode(folder).decode("ascii"))
         typ, data = self.imap.select(encoded, readonly=readonly)
         self._ok(typ, data, f"SELECT {folder!r}")

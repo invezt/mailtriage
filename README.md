@@ -35,6 +35,7 @@ Vollständig in [docs/einrichtung.md](docs/einrichtung.md).
 | `nachmittags` | Neue Post **und** eine Woche Rückstand |
 | `backlog --wochen N` | Nur Rückstand, N Wochen am Stück |
 | `anwenden [--ja]` | Den letzten Vorschlag ausführen |
+| `rueckgaengig [--ja]` | Einen ausgeführten Lauf zurückdrehen |
 | `status` | Wie weit ist der Rückstand |
 | `einrichten [--anlegen]` | Verbindung prüfen, Ordner anlegen |
 | `kategorien` | Kategorien und Aktionen anzeigen |
@@ -53,14 +54,28 @@ dem jede Ablage eine Entscheidung kostet. Mehr dazu in
 
 ## Warum nichts kaputtgeht
 
-- **Gelöscht heißt Papierkorb.** Endgültig gelöscht wird nie, der Papierkorb nie
-  geleert.
-- **Markiertes ist tabu.** Eine Mail mit Fahne wird nie gelöscht.
-- **Schutzliste.** Steuerberater, Anwalt, Bank, Finanzamt – nie löschen, nie Spam.
+Fest verdrahtet, durch keine Regel und keine Einstellung aushebelbar:
+
+- **Es versendet nie eine Mail.** Kein SMTP, kein Antworten, kein Weiterleiten.
+- **Es löscht nie endgültig.** `loeschen` heißt Papierkorb; der wird nie geleert.
+- **Es lädt nie Nachrichteninhalte.** Nur Kopfzeilen, nie ein Rumpf, nie ein Anhang.
+- **Nichts unter 30 Tagen** wird automatisch gelöscht, egal welche Regel greift.
+- **Postausgang, Entwürfe, Papierkorb und Spam** werden nie als Quelle gelesen.
+- **Ordnerwechsel löscht nichts** – `UNSELECT` statt `CLOSE`, sonst würden von dir
+  markierte Mails endgültig verschwinden.
+
+Dazu, was du selbst steuerst:
+
 - **Vorschlag vor Ausführung.** Ohne `--ja` passiert nichts.
-- **Im Zweifel nichts.** Passt keine Regel, bleibt die Mail liegen und wird vorgelegt.
-- **Echte Post an dich** wird nie automatisch weggeräumt, nur Massenversand und
-  Benachrichtigungen.
+- **Markiertes ist tabu.** Eine Mail mit Fahne wird nie gelöscht – dein manuelles Veto.
+- **Schutzliste** für Steuerberater, Anwalt, Bank, Finanzamt.
+- **Notbremse** gegen zu weit gefasste Regeln.
+- **Eingewöhnungsmodus** `--ohne-loeschen` und **Nur-Lesen-Konten**.
+- **Rückgängig** über die Message-ID, auch nach Neuvergabe der UIDs.
+
+Die ersten sechs Punkte sind als Test hinterlegt, der den Quelltext selbst liest –
+damit sie auch nach dem nächsten Umbau noch gelten. Details in
+[docs/sicherungen.md](docs/sicherungen.md).
 
 ## Warum es Apple Mail nicht überlastet
 
@@ -87,6 +102,7 @@ mailtriage/
 │   ├── planner.py       Scannen und Vorschlag schreiben
 │   ├── applier.py       Vorschlag ausführen
 │   ├── report.py        Aggregierter Bericht mit Zeilenlimit
+│   ├── guards.py        Harte Sicherungen, nicht abschaltbar
 │   ├── state.py         Fortschritt im Rückstand
 │   └── taxonomy.py      Kategorien und Aktionen
 ├── config/              Postfächer und Regeln (Beispiele im Repo)
@@ -109,4 +125,5 @@ python3 -m unittest discover -s tests -v
 
 - [Zeitplan](docs/zeitplan.md) – warum 10:00 und 16:00, wie lange der Rückstand dauert
 - [Konzept](docs/konzept.md) – Kategorien, Entscheidungslogik, Sicherheitsnetze
+- [Sicherungen](docs/sicherungen.md) – was nicht passieren kann, und warum
 - [Einrichtung](docs/einrichtung.md) – Schritt für Schritt

@@ -35,6 +35,8 @@
         "j.steinmetz@BITTE-EINTRAGEN.example.de"
       ],
       "quell_ordner": ["INBOX"],
+      "nur_lesen": false,
+      "_nur_lesen_hinweis": "Auf true setzen, um dieses Postfach nur zu beobachten: Es wird gescannt und berichtet, aber nie etwas verschoben. Sinnvoll, um dem System erst auf einem Konto zu vertrauen.",
       "ordner": {
         "archiv": "Archiv",
         "papierkorb": "Geloeschte Elemente",
@@ -55,6 +57,8 @@
     "bericht_max_beispiele": 5,
     "bericht_top_absender": 20,
     "bericht_max_pruefen": 60,
+    "mindestalter_loeschen_tage": 30,
+    "_mindestalter_hinweis": "Harte Untergrenze: Juengeres wird nie automatisch geloescht, egal welche Regel greift. Keine Regel kann das aushebeln.",
     "_bericht_max_pruefen_hinweis": "Wie viele Mails die Entscheidungsliste zeigt. Das ist deine Arbeitsliste im Backlog-Lauf - der Rest des Berichts bleibt aggregiert."
   }
 }

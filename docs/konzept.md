@@ -97,21 +97,22 @@ nicht an dich adressiert, also auch nicht zur Bearbeitung gedacht.
 ## Die Sicherheitsnetze
 
 Beim Aufräumen eines Backlogs ist die einzig wirklich teure Fehlentscheidung, etwas
-Wichtiges zu löschen. Dagegen liegen vier Schichten:
+Wichtiges unwiederbringlich zu verlieren. Die kurze Fassung:
 
-1. **Nichts wird endgültig gelöscht.** `loeschen` heißt: ab in den Papierkorb. Der
-   Papierkorb wird von diesem Werkzeug nie geleert. Alles ist wiederherstellbar,
-   solange dein Mailanbieter es vorhält (iCloud: 30 Tage).
-2. **Markiertes ist tabu.** Jede Mail mit Fahne in Apple Mail wird nie gelöscht, egal
-   welche Regel greift. Sie wird dir stattdessen vorgelegt.
-3. **Die Schutzliste.** Absender in `schutz` – Steuerberater, Anwalt, Notar, Finanzamt,
-   Familie – werden nie gelöscht und nie als Spam einsortiert.
-4. **Vorschlag vor Ausführung.** Jeder Lauf schreibt nur einen Vorschlag. Erst
-   `anwenden --ja` bewegt etwas. Ohne `--ja` passiert nichts.
+**Fest verdrahtet, nicht abschaltbar:** Es wird nie eine Mail versendet. Es wird nie
+endgültig gelöscht – `loeschen` heißt Papierkorb, und der wird nie geleert. Es werden
+nie Nachrichteninhalte geladen. Nichts unter 30 Tagen wird automatisch gelöscht, egal
+welche Regel greift. Postausgang, Entwürfe, Papierkorb und Spam werden nie angefasst.
 
-Wenn Schutz greift, wird die Regel nicht still übergangen – die Mail landet in
-`pruefen` und taucht im Bericht auf. Du siehst also, wo die Automatik zurückgetreten
-ist.
+**Von dir gesteuert:** Ohne `--ja` passiert nichts. Markierte Mails sind tabu. Die
+Schutzliste hält Steuerberater, Anwalt und Bank frei. Eine Notbremse stoppt zu weit
+gefasste Regeln. `--ohne-loeschen` für die Eingewöhnung, `nur_lesen` für Konten, die
+nur beobachtet werden sollen.
+
+**Wenn doch etwas schiefgeht:** `rueckgaengig` dreht einen Lauf zurück – über die
+Message-ID, also auch dann noch, wenn der Server neue Kennungen vergeben hat.
+
+Ausführlich, mit Begründungen: [Sicherungen](sicherungen.md).
 
 ## Warum IMAP und nicht AppleScript
 
