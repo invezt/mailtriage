@@ -15,22 +15,30 @@ und erst dein `--ja` bewegt etwas.
 
 ## Schnellstart
 
-```bash
-cp config/konten.beispiel.json config/konten.json     # Postfächer eintragen
-cp config/regeln.beispiel.json config/regeln.json     # Regeln anpassen
+Auf dem Mac, auf dem deine Mail liegt:
 
-python3 -m mailtriage einrichten --anlegen            # Verbindung + Ordner
-python3 -m mailtriage morgens                         # scannen (verändert nichts)
-python3 -m mailtriage anwenden                        # Trockenlauf
-python3 -m mailtriage anwenden --ja                   # ausführen
+```bash
+git clone https://github.com/invezt/mailtriage.git ~/mailtriage
+cd ~/mailtriage
+python3 -m mailtriage start
 ```
 
-Vollständig in [docs/einrichtung.md](docs/einrichtung.md).
+Der Assistent fragt die Postfächer ab, legt die Passwörter im Schlüsselbund ab,
+testet die Verbindung, legt die Ordner an und macht den ersten Lauf – der nur liest.
+Danach:
+
+```bash
+python3 -m mailtriage anwenden        # zeigt, was passieren würde
+python3 -m mailtriage anwenden --ja   # führt es aus
+```
+
+Schritt für Schritt in [docs/einrichtung.md](docs/einrichtung.md).
 
 ## Befehle
 
 | Befehl | Was er tut |
 |---|---|
+| `start` | Einrichtungsassistent: Postfächer, Ordner, erster Lauf |
 | `morgens` | Nur neue Post seit dem letzten Lauf |
 | `nachmittags` | Neue Post **und** eine Woche Rückstand |
 | `backlog --wochen N` | Nur Rückstand, N Wochen am Stück |
@@ -38,6 +46,9 @@ Vollständig in [docs/einrichtung.md](docs/einrichtung.md).
 | `rueckgaengig [--ja]` | Einen ausgeführten Lauf zurückdrehen |
 | `status` | Wie weit ist der Rückstand |
 | `einrichten [--anlegen]` | Verbindung prüfen, Ordner anlegen |
+
+Die Scan-Befehle kennen `--seit JJJJ-MM-TT` (ein bestimmtes Datum als Startpunkt),
+`--ohne-loeschen` (Eingewöhnungsmodus) und `--wochen N` (mehrere Backlog-Wochen).
 | `kategorien` | Kategorien und Aktionen anzeigen |
 
 ## Was es einordnet
@@ -103,6 +114,7 @@ mailtriage/
 │   ├── applier.py       Vorschlag ausführen
 │   ├── report.py        Aggregierter Bericht mit Zeilenlimit
 │   ├── guards.py        Harte Sicherungen, nicht abschaltbar
+│   ├── wizard.py        Einrichtungsassistent
 │   ├── state.py         Fortschritt im Rückstand
 │   └── taxonomy.py      Kategorien und Aktionen
 ├── config/              Postfächer und Regeln (Beispiele im Repo)
@@ -120,6 +132,10 @@ mailtriage/
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+112 Tests. Darunter ein vollständiger IMAP-Server, gegen den der echte Client über
+eine echte TLS-Verbindung läuft – Attrappen allein hätten die Fehler nicht gefunden,
+die dabei aufgefallen sind.
 
 ## Doku
 

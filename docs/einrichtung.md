@@ -1,7 +1,24 @@
 # Einrichtung
 
-Einmalig, dauert etwa 20 Minuten. Alles läuft auf deinem Mac; nichts davon braucht eine
-Installation von Zusatzpaketen – nur das Python, das macOS mitbringt.
+Einmalig, dauert etwa 20 Minuten. **Alles läuft auf dem Mac, auf dem deine Mail liegt** –
+nicht in einem Chatfenster und nicht in der Cloud. Zusatzpakete braucht es keine, nur das
+Python, das macOS mitbringt.
+
+## Der kurze Weg
+
+```bash
+git clone https://github.com/invezt/mailtriage.git ~/mailtriage
+cd ~/mailtriage
+python3 -m mailtriage start
+```
+
+Der Assistent führt durch alles, was unten einzeln beschrieben ist: Postfächer abfragen,
+Passwörter in den Schlüsselbund, Verbindung testen, Ordner anlegen, erster Lauf. Er
+verändert nichts in deinen Postfächern – er liest und schreibt einen Vorschlag.
+
+Wenn etwas klemmt oder du es von Hand machen willst, steht der ausführliche Weg unten.
+
+---
 
 ## 1. Repository holen
 
@@ -109,6 +126,12 @@ Ein einzelnes Konto, nur lesen:
 
 ```bash
 python3 -m mailtriage morgens --konto icloud
+```
+
+Nur die laufende Woche, ab einem bestimmten Tag:
+
+```bash
+python3 -m mailtriage morgens --seit 2026-09-14
 ```
 
 Dann den Bericht in `runs/` lesen. Sieht der Vorschlag plausibel aus?

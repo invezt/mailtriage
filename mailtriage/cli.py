@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from . import applier, config, guards, planner, report, state
@@ -68,7 +68,8 @@ def befehl_scannen(args, cfg: config.Config, modus: str) -> int:
                     lauf = planner.scanne(
                         konto, cfg, einzel, fortschritt, jetzt=jetzt,
                         leise=args.leise,
-                        ohne_loeschen=getattr(args, "ohne_loeschen", False))
+                        ohne_loeschen=getattr(args, "ohne_loeschen", False),
+                        seit=getattr(args, "seit", None))
                 except (MailboxError, ConfigError, guards.GuardError) as exc:
                     print(f"  FEHLER: {exc}", file=sys.stderr)
                     fehler += 1
@@ -241,6 +242,11 @@ def befehl_einrichten(args, cfg: config.Config) -> int:
     return 1 if probleme else 0
 
 
+def _start(args, cfg=None) -> int:
+    from .wizard import start
+    return start(args, cfg)
+
+
 def befehl_kategorien(args, cfg=None) -> int:
     print("Kategorien (worum geht es)\n")
     for name, beschreibung in KATEGORIEN.items():
@@ -269,19 +275,29 @@ def baue_parser() -> argparse.ArgumentParser:
         sp.add_argument("--leise", action="store_true", help="weniger Ausgabe")
         return sp
 
+    def _datum(text: str) -> date:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                f"{text!r} ist kein Datum. Erwartet: JJJJ-MM-TT, z.B. 2026-09-14")
+
     def scan_optionen(sp):
+        sp.add_argument("--seit", type=_datum, default=None,
+                        help="ab diesem Datum scannen statt ab dem gemerkten "
+                             "Stand, z.B. --seit 2026-09-14")
         sp.add_argument("--ohne-loeschen", action="store_true",
                         dest="ohne_loeschen",
                         help="Eingewoehnungsmodus: nichts wird geloescht oder als "
                              "Spam einsortiert, alles Destruktive wird vorgelegt")
         return sp
 
-    s = gemeinsam(sub.add_parser("morgens", help="10:00 – nur neue Nachrichten"))
+    s = scan_optionen(gemeinsam(sub.add_parser("morgens", help="10:00 – nur neue Nachrichten")))
     s.add_argument("--trotzdem", action="store_true", help=argparse.SUPPRESS)
     s.set_defaults(fn=lambda a, c: befehl_scannen(a, c, "taeglich"))
 
-    s = gemeinsam(sub.add_parser("nachmittags",
-                                 help="16:00 – Neues und eine Woche Backlog"))
+    s = scan_optionen(gemeinsam(sub.add_parser("nachmittags",
+                                 help="16:00 – Neues und eine Woche Backlog")))
     s.add_argument("--trotzdem", action="store_true",
                    help="Backlog weiterlaufen lassen, auch wenn er als fertig gilt")
     s.add_argument("--wochen", type=int, default=1,
@@ -321,6 +337,10 @@ def baue_parser() -> argparse.ArgumentParser:
                                  help="Verbindung pruefen, Ordner anlegen"))
     s.add_argument("--anlegen", action="store_true", help="fehlende Ordner anlegen")
     s.set_defaults(fn=befehl_einrichten)
+
+    s = sub.add_parser(
+        "start", help="Einrichtungsassistent: Postfaecher, Ordner, erster Lauf")
+    s.set_defaults(fn=_start, konto=None, leise=False, braucht_config=False)
 
     s = sub.add_parser("kategorien", help="Kategorien und Aktionen anzeigen")
     s.set_defaults(fn=befehl_kategorien, konto=None, leise=False, braucht_config=False)

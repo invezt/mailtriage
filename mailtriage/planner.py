@@ -75,7 +75,8 @@ def _fortschritt_anzeige(praefix: str):
 
 def scanne(konto: Konto, cfg: Config, modus: str, fortschritt: state.Fortschritt,
            *, jetzt: datetime | None = None, leise: bool = False,
-           nur_ungelesen: bool = False, ohne_loeschen: bool = False) -> Lauf:
+           nur_ungelesen: bool = False, ohne_loeschen: bool = False,
+           seit: date | None = None) -> Lauf:
     """Liest ein Konto im gewaehlten Modus und erzeugt den Plan."""
     jetzt = jetzt or datetime.now(timezone.utc)
     status = fortschritt.fuer(konto.name)
@@ -86,7 +87,9 @@ def scanne(konto: Konto, cfg: Config, modus: str, fortschritt: state.Fortschritt
             status, einst.backlog_fenster_tage, einst.taegliches_fenster_tage)
         since, before = _als_datetime(von), _als_datetime(bis)
     else:
-        von = state.taegliches_fenster(status, einst.taegliches_fenster_tage)
+        # --seit schlaegt den gemerkten Stand: damit laesst sich ein Fenster
+        # ausdruecklich benennen, etwa "ab Montag dieser Woche".
+        von = seit or state.taegliches_fenster(status, einst.taegliches_fenster_tage)
         bis, before = None, None
         since = _als_datetime(von)
 

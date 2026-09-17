@@ -117,8 +117,11 @@ class Mailbox:
                     timeout=self.timeout,
                 )
                 self._imap.login(self.user, self._password)
+                # imaplib liefert die Faehigkeiten je nach Version als str
+                # oder als bytes - beides muss hier ankommen.
                 self._capabilities = frozenset(
-                    c.decode().upper() for c in (self._imap.capabilities or ()))
+                    (c.decode("ascii", "replace") if isinstance(c, bytes) else str(c)).upper()
+                    for c in (self._imap.capabilities or ()))
                 self._log(f"verbunden mit {self.host} als {self.user}")
                 return
             except (imaplib.IMAP4.error, OSError, ssl.SSLError) as exc:
@@ -285,16 +288,28 @@ class Mailbox:
             block = uids[start:start + CHUNK_FETCH]
             typ, data = self.imap.uid("FETCH", ",".join(str(u) for u in block), spec)
             self._ok(typ, data, "FETCH")
-            for item in data:
+            for index, item in enumerate(data):
                 if not isinstance(item, tuple) or len(item) < 2:
                     continue
                 prefix, raw_headers = item[0], item[1]
-                uid_match = _UID_RE.search(prefix)
-                date_match = _DATE_RE.search(prefix)
+
+                # Die Attribute stehen nicht zwingend alle vor dem Literal:
+                # manche Server haengen FLAGS dahinter. Wird das uebersehen,
+                # gilt jede Mail als unmarkiert - und der Schutz markierter
+                # Mails waere stillschweigend wirkungslos. Also beide Seiten
+                # zusammen durchsuchen.
+                attribute = bytes(prefix)
+                if len(item) > 2 and isinstance(item[2], (bytes, bytearray)):
+                    attribute += b" " + bytes(item[2])
+                if index + 1 < len(data) and isinstance(data[index + 1], (bytes, bytearray)):
+                    attribute += b" " + bytes(data[index + 1])
+
+                uid_match = _UID_RE.search(attribute)
+                date_match = _DATE_RE.search(attribute)
                 if not uid_match or not date_match:
                     continue
-                size_match = _SIZE_RE.search(prefix)
-                flags_match = _FLAGS_RE.search(prefix)
+                size_match = _SIZE_RE.search(attribute)
+                flags_match = _FLAGS_RE.search(attribute)
                 flags = tuple(
                     flags_match.group(1).decode(errors="replace").split()
                 ) if flags_match else ()
