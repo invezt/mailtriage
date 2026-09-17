@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Startet den morgens-Scan um 9:45 - eine Viertelstunde vor der
+  Triage-Zeit, damit der Bericht fertig ist, wenn du dich hinsetzt.
+  Es wird nur gelesen und ein Vorschlag geschrieben. Verschoben wird nichts.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>de.mailtriage.morgens</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>PFAD_ZUM_REPO/bin/triage.sh</string>
+    <string>morgens</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>45</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>PFAD_ZUM_REPO/runs/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>PFAD_ZUM_REPO/runs/launchd.log</string>
+</dict>
+</plist>

@@ -1,0 +1,165 @@
+{
+  "_hinweis": "Kopieren nach config/regeln.json. Die Regeln werden von oben nach unten geprueft, die erste passende gewinnt. Spezielles nach oben, Allgemeines nach unten.",
+
+  "schutz": {
+    "kommentar": "Diese Absender werden nie geloescht und nie als Spam einsortiert. Passt eine Loeschregel trotzdem, wird die Mail nur zur Pruefung vorgelegt. Markierte Mails (Fahne in Apple Mail) sind immer geschuetzt, auch ohne Eintrag hier.",
+    "von_domain": [
+      "elster.de",
+      "finanzamt.de",
+      "notar.de"
+    ]
+  },
+
+  "standard": {
+    "kategorie": "unklar",
+    "aktion": "pruefen",
+    "begruendung": "Keine Regel hat gepasst - im Zweifel wird nichts angefasst."
+  },
+
+  "regeln": [
+    {
+      "name": "Offensichtlicher Spam",
+      "wenn": { "spam_verdacht": true },
+      "dann": { "kategorie": "spam", "aktion": "spam" }
+    },
+
+    {
+      "name": "Behoerden, Steuer, Notar",
+      "wenn": { "betreff_enthaelt": ["Steuerbescheid", "Finanzamt", "Elster", "Notartermin", "Grundbuch"] },
+      "dann": { "kategorie": "finanzen", "aktion": "handeln",
+                "begruendung": "Fristen - immer selbst ansehen." }
+    },
+
+    {
+      "name": "Immobilien: aktuell und direkt",
+      "wenn": {
+        "ist_massenversand": false,
+        "neuer_als_tage": 30,
+        "betreff_enthaelt": ["Mieter", "Mietvertrag", "Nebenkosten", "Betriebskosten",
+                             "Hausgeld", "Eigentuemerversammlung", "WEG", "Exposé", "Expose",
+                             "Objekt", "Besichtigung", "Handwerker", "Heizung", "Ablesung"]
+      },
+      "dann": { "kategorie": "immobilien", "aktion": "handeln" }
+    },
+    {
+      "name": "Immobilien: aelter, zum Nachschlagen",
+      "wenn": {
+        "betreff_enthaelt": ["Mieter", "Mietvertrag", "Nebenkosten", "Betriebskosten",
+                             "Hausgeld", "Eigentuemerversammlung", "WEG", "Exposé", "Expose",
+                             "Objekt", "Besichtigung", "Handwerker", "Heizung", "Ablesung"]
+      },
+      "dann": { "kategorie": "immobilien", "aktion": "archivieren", "unterordner": "Immobilien" }
+    },
+
+    {
+      "name": "Investment: aktuell und direkt",
+      "wenn": {
+        "ist_massenversand": false,
+        "neuer_als_tage": 30,
+        "betreff_enthaelt": ["Beteiligung", "Zeichnung", "Kapitalabruf", "Capital Call",
+                             "Ausschuettung", "Depot", "Fonds", "Gesellschafter",
+                             "Term Sheet", "Investment", "Quartalsbericht"]
+      },
+      "dann": { "kategorie": "investment", "aktion": "handeln" }
+    },
+    {
+      "name": "Investment: Reportings und Aelteres",
+      "wenn": {
+        "betreff_enthaelt": ["Beteiligung", "Zeichnung", "Kapitalabruf", "Capital Call",
+                             "Ausschuettung", "Depot", "Fonds", "Gesellschafter",
+                             "Term Sheet", "Investment", "Quartalsbericht"]
+      },
+      "dann": { "kategorie": "investment", "aktion": "archivieren", "unterordner": "Investment" }
+    },
+
+    {
+      "name": "Rechnungen und Vertraege",
+      "wenn": {
+        "betreff_enthaelt": ["Rechnung", "Zahlungserinnerung", "Mahnung", "Vertrag",
+                             "Kuendigung", "Police", "Versicherungsschein", "Beitragsrechnung"]
+      },
+      "dann": { "kategorie": "finanzen", "aktion": "archivieren", "unterordner": "Finanzen",
+                "begruendung": "Belege aufheben, aber sie muessen nicht im Posteingang liegen." }
+    },
+
+    {
+      "name": "Massenversand: alt und nie gelesen",
+      "wenn": { "ist_massenversand": true, "ungelesen": true, "aelter_als_tage": 45 },
+      "dann": { "kategorie": "newsletter", "aktion": "loeschen",
+                "begruendung": "In sechs Wochen nicht geoeffnet - wird es auch nicht mehr." }
+    },
+    {
+      "name": "Massenversand: alt und schon gelesen",
+      "wenn": { "ist_massenversand": true, "aelter_als_tage": 120 },
+      "dann": { "kategorie": "newsletter", "aktion": "loeschen" }
+    },
+    {
+      "name": "Massenversand: aktuell",
+      "wenn": { "ist_massenversand": true },
+      "dann": { "kategorie": "newsletter", "aktion": "lesen" }
+    },
+
+    {
+      "name": "Versand- und Bestellmeldungen, erledigt",
+      "wenn": {
+        "aelter_als_tage": 60,
+        "betreff_enthaelt": ["Sendungsverfolgung", "Ihre Bestellung", "versandt", "zugestellt",
+                             "Lieferung", "Paket", "Bestellbestaetigung", "Auftragsbestaetigung"]
+      },
+      "dann": { "kategorie": "benachrichtigung", "aktion": "loeschen",
+                "begruendung": "Paket ist laengst da." }
+    },
+    {
+      "name": "Automatische Absender, alt",
+      "wenn": {
+        "von_enthaelt": ["noreply", "no-reply", "donotreply", "do-not-reply",
+                         "newsletter@", "mailer@", "notifications@", "info@"],
+        "aelter_als_tage": 60
+      },
+      "dann": { "kategorie": "benachrichtigung", "aktion": "loeschen" }
+    },
+    {
+      "name": "Automatische Absender, aktuell",
+      "wenn": {
+        "von_enthaelt": ["noreply", "no-reply", "donotreply", "do-not-reply",
+                         "mailer@", "notifications@"]
+      },
+      "dann": { "kategorie": "benachrichtigung", "aktion": "archivieren" }
+    },
+
+    {
+      "name": "Kalender- und Terminmails",
+      "wenn": { "betreff_enthaelt": ["Einladung:", "Aktualisiert:", "Abgesagt:",
+                                     "Terminanfrage", "Zusage:", "Absage:"] },
+      "dann": { "kategorie": "geschaeftlich", "aktion": "archivieren",
+                "begruendung": "Steht im Kalender, muss nicht im Posteingang stehen." }
+    },
+
+    {
+      "name": "Ich habe schon geantwortet",
+      "wenn": { "beantwortet": true, "aelter_als_tage": 14 },
+      "dann": { "kategorie": "geschaeftlich", "aktion": "archivieren",
+                "begruendung": "Beantwortet und aelter als zwei Wochen - der Ball liegt nicht bei mir." }
+    },
+
+    {
+      "name": "Direkt an mich, aktuell",
+      "wenn": { "ist_massenversand": false, "an_mich_direkt": true, "neuer_als_tage": 14 },
+      "dann": { "kategorie": "geschaeftlich", "aktion": "handeln",
+                "begruendung": "Echter Mensch, echte Mail, noch frisch." }
+    },
+    {
+      "name": "Direkt an mich, aelter als ein Monat",
+      "wenn": { "ist_massenversand": false, "an_mich_direkt": true, "aelter_als_tage": 30 },
+      "dann": { "kategorie": "geschaeftlich", "aktion": "archivieren",
+                "begruendung": "Nach einem Monat ist das Geschichte, kein Arbeitsvorrat. Was wirklich offen ist, kommt ohnehin per Nachfrage zurueck." }
+    },
+
+    {
+      "name": "Nur in Kopie, aelter",
+      "wenn": { "an_mich_direkt": false, "ist_massenversand": false, "aelter_als_tage": 21 },
+      "dann": { "kategorie": "geschaeftlich", "aktion": "archivieren",
+                "begruendung": "Nicht direkt adressiert - zur Kenntnis, nicht zur Bearbeitung." }
+    }
+  ]
+}

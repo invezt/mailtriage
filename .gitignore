@@ -1,0 +1,12 @@
+# Echte Konfiguration - enthaelt Postfaecher und Absenderadressen.
+# Nur die *.beispiel.json gehoeren ins Repo.
+config/konten.json
+config/regeln.json
+
+# Laeufe und Fortschritt enthalten Betreffzeilen und Absender echter Mails.
+runs/
+state/
+
+__pycache__/
+*.pyc
+.DS_Store
